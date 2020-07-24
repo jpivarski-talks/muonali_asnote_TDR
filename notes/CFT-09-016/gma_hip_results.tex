@@ -1,0 +1,130 @@
+Both the HIP and Millepede algorithms were applied to align a subset
+of barrel chambers during the CRAFT
+data-taking run.  Wheels $-$1, 0, and $+$1 were aligned, with the
+exception of sectors 1 and 7 (extreme horizontal sides of the
+detector) using the barrel section of the tracker as the track
+reference.  The alignment was restricted to this central subset of the
+barrel chambers because they were the only ones sufficiently
+illuminated by the primarily vertical distribution of cosmic rays.  We
+also restricted the input to high-quality $100 < p_T < 200$~GeV tracks
+with at least 15 tracker hits and a tracker reduced $\chi^2 < 10$.
+Loosening these cuts does not make significantly more chambers
+available for alignment.  The dataset included all runs marked as acceptable for
+physics in the CMS run registry, with a magnetic field of 3.8~T.  The
+CRAFT period included several on-off cycles of the magnetic field,
+which were shown to result in reproducible alignments with the
+hardware system~\cite{ref:hardware_alignment} and tracks (within
+statistical precision).
+
+In addition to the chambers explicitly excluded from alignment due to
+poor statistics, two chambers next to sectors 1 and 7 (in wheel,
+station, sector ($-$1, 2, 8) and ($+$1, 3, 8)) had no tracks passing
+the cuts and two more (($-$1, 1, 12) and ($+$1, 2, 2)) failed to
+converge in HIP, owing to the extreme azimuthal asymmetry of cosmic
+rays underground.
+
+We checked our alignment results in four ways: we verified (1) that
+the algorithms optimized their intended expressions, (2) that they
+agree with one another, (3) that the new global chamber positions yield the same or
+better agreement with local measurements, and (4) that the new
+alignment yields better momentum resolution for tracks.
+
+The simplest way to test the internal consistency of the algorithm (1)
+is to run the alignment algorithm a second time on the same dataset
+and verify that the second alignment corrections are always zero.  As
+a sanity check, we also verified that the raw residuals distributions
+are centered at zero with very high precision.  An example of this was
+shown in Figure~\ref{fig:examplefit}.
+
+To demonstrate that the two algorithms agree with each other (2), we
+present corrections computed by each algorithm in a scatter
+plot~\ref{fig:sidebyside}.  Though the corrections were on the order
+of 0.5--3~mm/mrad, the two algorithms agree with each other within
+expectations from the Monte Carlo study (Figure~\ref{fig:hip_MC}).  The
+two parameters in which no correlation is observed between the
+algorithms are $\delta_z$ and $\delta_{\phi_z}$, which are the most
+likely to be affected by the treatment of tails in residuals
+distributions.  The distributions of $\delta_y$ and $\delta_{\phi_x}$
+have tall peaks at zero: these parameters cannot be aligned in
+station~4, because station~4 chambers do not measure $\Delta y$
+residuals.
+
+\begin{figure}
+\begin{center}
+%% \includegraphics[width=0.32\linewidth]{plots/gma_hip_results/delta_xComparison.pdf}
+%% \includegraphics[width=0.32\linewidth]{plots/gma_hip_results/delta_yComparison.pdf}
+%% \includegraphics[width=0.32\linewidth]{plots/gma_hip_results/delta_zComparison.pdf}
+
+%% \includegraphics[width=0.32\linewidth]{plots/gma_hip_results/phixComparison.pdf}
+%% \includegraphics[width=0.32\linewidth]{plots/gma_hip_results/phiyComparison.pdf}
+%% \includegraphics[width=0.32\linewidth]{plots/gma_hip_results/phizComparison.pdf}
+
+\includegraphics[width=\linewidth]{plots/gma_hip_results/MP-V4_vs_HIP-V4.pdf}
+\end{center}
+\caption{Alignment corrections determined by the HIP and Millepede algorithms. (Only aligned chambers are shown.)\label{fig:sidebyside}}
+\end{figure}
+
+Local alignment measurements to test consistency between global data
+and local data (3) were derived by extrapolating linear track segments
+from one chamber to the next (in the same sector, neighboring
+stations).  This verification procedure introduces information not
+used in the alignment itself, namely the higher precision with which
+tracks can be propagated over a short distance (1~meter) than a long
+distance (3--6~meters).
+
+For this diagnostic, tracks were selected with $p_T > 50$~GeV and a
+correction was applied to cancel the effect of the magnetic field by
+taking advantage of the fact that positively- and negatively-charged
+tracks are pushed in opposite directions.
+%% Figure~\ref{fig:valid_DTconsts} shows the level of agreement in $x$
+%% position and $\frac{dx}{dz}$ angle between segments in neighboring
+%% stations for each sector in wheel~0.
+To compare the initial state with the results of each algorithm in all
+station-pairs, sectors, and wheels, we filled histograms with the
+fitted Gaussian peak of each comparison, shown in
+Figure~\ref{fig:valid_NOMvsMPvsHIP}.  Though the global algorithms
+changed the positions of chambers by 2.5~mm in $\delta_x$ and 1.5~mrad
+in $\delta_{\phi_y}$ (RMS in Figure~\ref{fig:sidebyside}), local
+differences of 0.8--1.3~mm and 1.0--1.3~mrad are not only maintained
+but reduced by 10\% to as much as a factor of 2.  As expected, the chambers which are closest
+to the tracker (station~1-to-2 differences) are the most precisely
+aligned.  The individual outliers in station~4 contain internal
+structure in their residuals distributions which are the subject of
+further study.
+
+%% \begin{figure}
+%%   \centering
+%%   \subfigure[Average $x$ difference between stations]{\includegraphics[width=0.4\textwidth, angle=90]{plots/validation/aligVal_08June09_LocalX_YB0.pdf}}
+%%   \subfigure[Average $\frac{dx}{dz}$ difference between stations]{\includegraphics[width=0.4\textwidth, angle=90]{plots/validation/aligVal_08June09_Phi_YB0.pdf}}
+%%   \caption{Validation of DT alignment by comparing track segments in
+%%   neighboring chambers (after alignment using the HIP algorithm).\label{fig:valid_DTconsts}}
+%% \end{figure}
+ 
+\begin{figure}
+  \centering
+  \subfigure[Before global alignment]{\includegraphics[width=0.4\textwidth, angle=90]{plots/gma_hip_results/YB0YB1YBm1_V4_38T.pdf}}
+  \subfigure[Results from the HIP algorithm]{\includegraphics[width=0.45\textwidth, angle=90]{plots/validation/meanHisto_HIP_onlyAlign.pdf}}
+  \subfigure[Results from the Millepede algorithm]{\includegraphics[width=0.45\textwidth, angle=90]{plots/validation/meanHisto_Millepede.pdf}}
+  \caption{Local differences in alignment as measured by segments.  Each histogram entry is a pair of chambers in neighboring stations, but the same wheel and sector.  The three histograms show station~1-to-2 differences (blue), 2-to-3 differences (red), and 3-to-4 differences (green).  \label{fig:valid_NOMvsMPvsHIP}}
+\end{figure}
+ 
+To verify that the new alignment (in this case, HIP only) improves
+momentum resolution (4), we selected cosmic rays with $p_T > 200$~GeV,
+split each into two tracks near the origin (similar to what would be
+observed in LHC collisions), and compared the momentum of the top and
+bottom fits.  Since the cosmic ray muon is a single particle, any
+mismatch between the halves is purely instrumental.  Cosmic rays have
+a steeply falling distribution, so most of the selected tracks have
+$p_T$ close to 200~GeV.  The alignment was performed using tracks with
+$100 < p_T < 200$~GeV tracks, so the diagnostic sample is
+statistically independent from the alignment.
+Figure~\ref{fig:chargesplitting} compares tracker-only tracks and
+tracks reconstructed with muon hits (first muon station only), before
+and after the global muon alignment.
+
+\begin{figure}
+  \centering
+  \subfigure[Before global muon alignment]{\includegraphics[width=0.45\linewidth]{plots/monitoring_validation/chargesplitting_withoutalignment.pdf}}
+  \subfigure[Results from the HIP algorithm]{\includegraphics[width=0.45\linewidth]{plots/monitoring_validation/chargesplitting_withalignment.pdf}}
+  \caption{Top vs.~bottom $1/p_T$ comparison for $p_T \gtrsim 200$~GeV split cosmic rays.\label{fig:chargesplitting}}
+\end{figure}

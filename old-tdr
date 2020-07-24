@@ -1,0 +1,429 @@
+#!/usr/bin/env perl
+
+#############################################################################
+#
+# Perl script to build the TDR, cleanup, and so on.  For help, type:
+#
+#     >  tdr help
+#
+#                                   Lucas Taylor   6 January 2005
+#############################################################################
+
+use File::Basename;   # access to directory, filename and extension of script
+use File::Copy;
+use File::Spec::Functions; # catfile
+use Cwd;              # like Unix pwd but more portable
+use Cwd 'abs_path';
+use File::Glob 'bsd_glob';
+
+
+#############################################################################
+# Main:
+#############################################################################
+
+$n_args = @ARGV;      # number of elements in argument list, @ARGV
+
+if ($n_args == 0)
+{    print "\n***** No arguments specified *****\n\n";
+     die "For more details type>   tdr help\n\n";
+}
+elsif ($n_args > 2)
+{    print "\n***** Too many arguments specified *****\n\n";
+     die "For more details type>   tdr help\n\n";
+}
+
+&init();
+
+$arg1 = $ARGV[0];   # array @ARGV contains input arguments
+$arg2 = $ARGV[1];
+
+if (   $arg1 eq "help"      || $arg1 eq "h"  ||
+       $arg1 eq "-help"     || $arg1 eq "-h" ||
+       $arg1 eq "--help")                     { &print_usage ();}
+elsif ($arg1 eq "build"     || $arg1 eq "b")  { &build       ( $arg2 );}
+elsif ($arg1 eq "clean"     || $arg1 eq "c")  { &clean       (       );}
+elsif ($arg1 eq "runtime"   || $arg1 eq "r")  { &runtime     ( $arg2 );}
+elsif ($arg1 eq "test")                       { &test        ( $arg2 );}
+elsif ($arg1 eq "veryclean" || $arg1 eq "v")  { &veryclean   ();}
+else{ # Whatever arguments were typed, they don't make sense...
+       print "\n    ***** Invalid arguments ***** \n\n";
+       die "For more details type>   tdr help\n\n";
+    }
+
+
+
+
+
+#############################################################################
+# Subroutines:
+#############################################################################
+
+
+#############################################################################
+sub print_usage {
+    print "******************************************************************************\n";
+    print "* Builds TDR documents                      Lucas Taylor, 6 January 2005     *\n";
+    print "*                                                                            *\n";
+    print "* Initialisation (once per session/new shell)                                *\n";
+    print "* --------------                                                             *\n";
+    print "* > eval `tdr runtime -sh`    // for Bourne-shell or Korn shell              *\n";
+    print "* > eval `tdr runtime -csh`   // for c-shell or tc shell                     *\n";
+    print "*                                                                            *\n";
+    print "* Usage:                                                                     *\n";
+    print "* -----                                                                      *\n";
+    print "* > tdr help           // display this help                                  *\n";
+    print "*                                                                            *\n";
+    print "* > tdr build [target] // process target.tex to produce ps, pdf, etc.        *\n";
+    print "*     target=notes_for_authors  // (default): builds documentation           *\n";
+    print "*            ctdr      // Computing TDR                                      *\n";
+    print "*            ptdr1     // Physics TDR Vol I                                  *\n";
+    print "*            ptdr2     // Physics TDR Vol II                                 *\n";
+    print "*            ptdr2     // Physics TDR Vol II                                 *\n";
+    print "*            dloi      // Diffractive Letter of Intent                       *\n";
+    print "*            foo       // builds arbitrary file foo.tex in current directory.*\n";
+    print "*                                                                            *\n";
+    print "* > tdr clean          // deletes temporary output files                     *\n";
+    print "* > tdr veryclean      // normal clean and also emacs backups etc.           *\n";
+    print "*                                                                            *\n";
+    print "******************************************************************************\n";
+}
+
+
+
+#############################################################################
+sub init {
+#
+# Define various input and output directories
+#
+    if ($^O eq "MSWin32") {
+      $cur_dir = abs_path(cwd());
+      $bin_dir = abs_path(dirname($0));
+      $top_dir = $bin_dir;
+      $gen_dir = $top_dir."/general";
+      $tmp_dir = $top_dir."/tmp";
+      }
+    else {
+      $cur_dir = &full_path(&cwd());                # Current directory
+      $bin_dir = &full_path(dirname($0));           # Directory containing this script
+      $top_dir = &full_path($bin_dir);              # Top level of checkout area - this is where the script is
+      $gen_dir = &full_path($top_dir."/general");   # Dir. of document skeleton/style
+      $tmp_dir = &full_path($top_dir."/tmp");       # Dir. of temp output, dvi/PS files, etc.
+      }
+
+}
+
+
+
+
+#############################################################################
+sub build {
+#
+#   Build {$target}.tex
+#
+    &clean();
+#
+#   Take target in this order: (1) command line, (2) environment (3) hardwired default
+#
+    my $target = $_[0] || $ENV{TDR_TARGET} || "notes_for_authors";
+
+#   Find the target tex file to be built
+    my $target_tex = "$target".'.tex';
+
+# Look in some sensible places (yeah, this is not elegant but it's clear and it works)
+    if   ( -e "$cur_dir/$target_tex")               { $tex_dir = "$cur_dir";           }
+    elsif( -e "$top_dir/general/$target_tex")       { $tex_dir = "$top_dir/general";  }
+    elsif( -e "$top_dir/ctdr/tex/$target_tex")      { $tex_dir = "$top_dir/ctdr/tex";  }
+    elsif( -e "$top_dir/ptdr1/tex/$target_tex")     { $tex_dir = "$top_dir/ptdr1/tex";  }
+    elsif( -e "$top_dir/ptdr2/tex/$target_tex")     { $tex_dir = "$top_dir/ptdr2/tex";  }
+    elsif( -e "$top_dir/dloi/tex/$target_tex")      { $tex_dir = "$top_dir/dloi/tex";  }
+    else {die "Cannot find target file: $target_tex\n";}
+
+    $full_target_tex =  "$tex_dir/$target_tex";
+    print "\n",'Building:  ',"$full_target_tex\n\n";
+#    die "End debug";
+
+#  Define PATH of places to find other tex files, figures, bibliography stuff
+#  For now, only look in a single tree (means e.g. CTDR pictures are not exposed to PTDR)
+#  Revisit this if it looks likely to be needed.
+
+    my $ps = ":"; # path separator symbol
+    if ($^O eq "MSWin32") {$ps = ";";} # use ; for Windows
+
+   $tex_path    = "$tex_dir".$ps."$cur_dir/tex".$ps;
+   $bib_path    = "$tex_dir/../bib".$ps."$tex_dir/../../bib".$ps."$tex_dir/../../../bib".$ps."$tex_dir/../../../../bib".$ps."$tex_dir/../../../../../bib".$ps;  # N.B. should match "cat XXX/*.bib" below
+   $fig_path    = "$tex_dir/../fig".$ps."$tex_dir/../../fig".$ps."$tex_dir/../../../fig".$ps."$tex_dir/../../../../fig".$ps."$tex_dir/../../../../../fig".$ps;
+   $common_path = "$gen_dir".$ps."$gen_dir/tex_extensions".$ps."$tmp_dir".$ps."$cur_dir".$ps."$cur_dir/..".$ps;
+
+# Define directories to be searched by LaTeX, including one where script was invoked
+# Note that it will revert automatically to its original value when script completes
+
+$ENV{TEXINPUTS}    = "$tex_path"."$bib_path"."$fig_path"."$common_path".$ENV{TEXINPUTS};
+$ENV{TEXPSHEADERS} = $ENV{TEXINPUTS}; # This is required by \includegraphics when using pdftex
+
+#   Set up temporary area and create input LaTeX file (boilerplate + target file)
+
+    -e $tmp_dir || mkdir ($tmp_dir,0755) || die "Failed to create temporary output directory";
+
+    my $temp_stem  = "$tmp_dir/$target".'_temp';
+    my $temp_tex   = "$temp_stem".'.tex';
+
+    unlink($temp_tex);
+    &mycat( "$gen_dir/skeleton_start.tex", $temp_tex );
+#
+#   get the definitions.tex file from the tree you are in
+#
+
+    if( -e "$tex_dir/definitions.tex")             { &mycat( "$tex_dir/definitions.tex", $temp_tex) ; }
+    if( -e "$tex_dir/../definitions.tex")          { &mycat( "$tex_dir/../definitions.tex", $temp_tex) ; }
+    if( -e "$tex_dir/../../definitions.tex")       { &mycat( "$tex_dir/../../definitions.tex", $temp_tex) ; }
+    if( -e "$tex_dir/../../../definitions.tex")    { &mycat( "$tex_dir/../../../definitions.tex", $temp_tex) ; }
+    if( -e "$tex_dir/../../../../definitions.tex") { &mycat( "$tex_dir/../../../../definitions.tex", $temp_tex) ; }
+    if( -e "$tex_dir/../../../../../definitions.tex") { &mycat( "$tex_dir/../../../../../definitions.tex", $temp_tex) ; }
+#
+#   This is general definitions file - it uses \providecommand so definitions can
+#   be overridden just by defining them in one of the above definitions.tex files
+#
+    if( -e "$gen_dir/definitions.tex")             { &mycat("$gen_dir/definitions.tex", $temp_tex) ; }
+
+    &mycat( $full_target_tex, $temp_tex);
+    &mycat( "$gen_dir/skeleton_end.tex", $temp_tex);
+
+#   Set up temporary bibliography style and DB files
+
+    my $temp_bst   = "$tmp_dir/auto_generated.bst";   # Note: this is referred to explicitly from latex
+    my $temp_bib   = "$tmp_dir/auto_generated.bib";   # Note: this is referred to explicitly from latex
+
+    unlink($temp_bst);
+    unlink($temp_bib);
+
+    copy("$gen_dir/lucas_unsrt.bst", $temp_bst);
+
+    &mycat(bsd_glob("$tex_dir/../bib/*.bib"), bsd_glob("$tex_dir/../../bib/*.bib"), $temp_bib);  # Must agree with $bib_path
+
+
+#   Now run latex, build table of contents, index, etc. and create dvi/PS/etc. files
+    if ($^O eq "MSWin32") {
+        my $orig_dir = Cwd::abs_path;
+        chdir($tmp_dir);
+        my $dirstring;
+        my $files = $ENV{TEXINPUTS};
+        $files =~ s/\//\\/g; # replace forward slashes with back slashes
+        foreach $dir (split($ps,$files)) {
+            if (-e $dir) {$dirstring .= "-include-directory=".'"'.$dir.'" '};
+            }
+        $temp_tex = '"'.$temp_tex.'"';
+        print ("Texing file: $temp_tex\n");
+        system ("pdflatex -quiet $dirstring $temp_tex");
+        print ("BibTeXing file: $temp_stem\n");
+        $temp_stem = '"'.$temp_stem.'"';
+        system ("bibtex -quiet $dirstring $temp_stem");
+        print ("Texing file: $temp_tex\n");
+        system ("pdflatex -quiet $dirstring $temp_tex");
+        print ("Texing file: $temp_tex\n");
+        system ("pdflatex  $dirstring $temp_tex");
+        chdir( $orig_dir);
+        }
+    else {
+        system ("cd         $tmp_dir;
+             pdflatex   $temp_tex;
+             bibtex     $temp_stem;
+             pdflatex   $temp_tex;
+             pdflatex   $temp_tex");
+             }
+
+    print "\n-------------------------------------------------------------------\n\n",
+          "Output directory: $tmp_dir\n\n",
+          "Output files: \n\n";
+    &myls("$tmp_dir");
+
+    print "\n-------------------------------------------------------------------\n\n",
+          "Output PDF file(s):\n\n";
+    &myls("$tmp_dir","*.pdf");
+    print ("\n");
+}
+
+
+
+#############################################################################
+sub clean {
+    print "\nRemoving all contents of temporary directory: $tmp_dir\n";
+    unlink(bsd_glob("$tmp_dir/*"));
+    rmdir($tmp_dir);
+}
+
+
+
+#############################################################################
+sub veryclean {
+# could be less crude but good enough for now
+
+    print "\nCleaning everything...\n";
+    &clean();
+
+    print "\nDeleting emacs backup files...\n";
+    unlink (bsd_glob ("$top_dir/*.*~"));
+    unlink (bsd_glob ("$top_dir/*/*.*~"));
+    unlink (bsd_glob ("$top_dir/*/*/*.*~"));
+    unlink (bsd_glob ("$top_dir/*/*/*/*.*~"));
+    unlink (bsd_glob ("$top_dir/*/*/*/*/*.*~"));
+
+    print "\nDeleting nedit backup files...\n";
+    unlink (bsd_glob ("$top_dir/*.*.bak"));
+    unlink (bsd_glob ("$top_dir/*/*.*.bak"));
+    unlink (bsd_glob ("$top_dir/*/*/*.*.bak"));
+    unlink (bsd_glob ("$top_dir/*/*/*/*.*.bak"));
+    unlink (bsd_glob ("$top_dir/*/*/*/*/*.*.bak"));
+
+    print "\nDeleting all dvi, toc, lof, etc. files...\n";
+
+    unlink (bsd_glob ("$top_dir/*/*.ind"));
+    unlink (bsd_glob ("$top_dir/*/*.ilg"));
+    unlink (bsd_glob ("$top_dir/*/*.aux"));
+    unlink (bsd_glob ("$top_dir/*/*.aidx"));
+    unlink (bsd_glob ("$top_dir/*/*.idx"));
+    unlink (bsd_glob ("$top_dir/*/*.lof"));
+    unlink (bsd_glob ("$top_dir/*/*.lot"));
+    unlink (bsd_glob ("$top_dir/*/*.log"));
+    unlink (bsd_glob ("$top_dir/*/*.dvi"));
+    unlink (bsd_glob ("$top_dir/*/*.toc"));
+    unlink (bsd_glob ("$top_dir/*/*.blg"));
+    unlink (bsd_glob ("$top_dir/*/*.bbl"));
+
+}
+
+
+#############################################################################
+sub runtime {
+#
+#   Changes environment variables *OUTSIDE* scope of the script
+#   (using ENV is only within scope of script).
+#
+#   To use this, you need to use eval (see help) to "invoke" the
+#   env setting commands which are printed out (see below)
+#
+    my $shell = $_[0] || "-csh";
+
+#   Add bin directory to PATH (but only if it's not there already)
+
+#    print ('$PATH    = ',"$ENV{PATH} \n");
+#    print ('$bin_dir = ',"$bin_dir   \n");
+
+    if ($ENV{PATH} !~ /$bin_dir/){
+        print ("\n");
+
+        if ($shell eq "-csh" || $shell eq "-tcsh") {
+            print "echo Prepending PATH with: $bin_dir;",
+                  "setenv PATH $bin_dir".":$ENV{PATH}\n";
+        }
+        elsif($shell eq "-sh" || $shell eq "-ksh"){
+            print "echo Prepending PATH with: $bin_dir;",
+                  'PATH="',"$bin_dir".":$ENV{PATH}",'";',
+                  "export PATH\n";
+        }
+        else{
+            die "Unknown shell option: $shell\n\n";
+        }
+    }
+}
+
+#############################################################################
+sub test {
+
+    print "\nExecuting tdr test\n-------------------\n\n";
+
+    print '$cur_dir = ',"$cur_dir\n\n";
+    print '$top_dir = ',"$top_dir\n";
+    print '$bin_dir = ',"$bin_dir\n";
+    print '$gen_dir = ',"$gen_dir\n";
+    print '$tex_dir = ',"$tex_dir\n";
+    print '$fig_dir = ',"$fig_dir\n";
+    print '$bib_dir = ',"$bib_dir\n\n";
+    print '$tmp_dir = ',"$tmp_dir\n\n";
+
+    print '$ENV{TEXINPUTS} = ',"$ENV{TEXINPUTS}\n\n";
+
+}
+
+
+
+#############################################################################
+sub full_path {
+#
+# Get full directory path from relative one and context
+#
+  my $file        = shift;
+  my $current_dir = shift || &cwd();
+#  print ("full_dir: file= $file, current_dir=$current_dir\n");
+  if("$file" eq "")
+       {return "";}
+  elsif($file=~/^~\/(.*)/)
+       {$file="$ENV{HOME}/$1"; }
+  elsif($file=~/^~[^\/](.+)\/(.*)/)
+       {$file=`dirname ~$1`;
+        chomp $file;
+        $file="$file/$2";}
+  elsif($file=~/^~[^\/](.+)$/)
+       {$file=`dirname ~$1`;
+        chomp $file;}
+  elsif($file=~/^[^\/]/)
+       {$file="${current_dir}/$file";}
+
+  return &arrange_path($file);
+}
+
+#############################################################################
+sub arrange_path {
+  my $file=shift;
+#  print ("arrange_path: file = $file\n");
+  if("$file" eq "") {return "";}
+
+  while($file=~/(.*)\/\.\/(.*)/){$file="$1/$2";}
+
+  if($file=~/(.*)\/\.$/){$file="$1";}
+
+  while($file=~/(.*?)\/\.\.\/(.*)/){
+     $file=`dirname $1`;
+     chomp $file;
+     $file="$file/$2";
+  }
+  while($file=~/(.*?)\/\.\.$/){
+     $file=`dirname $1`;
+     chomp $file;
+  }
+  while($file=~/(.*)\/\/(.*)/) {$file="$1/$2";}
+#  print("arrange_path, returning: $file\n");
+
+  return $file;
+
+}
+#############################################################################
+sub mycat
+{
+# acts as cat.
+# default is append (see second arg in the open command below)
+
+   open(OUTF, ">>", pop(@_)) || die("can't open outputfile: $!");
+   FILE: foreach (@_) {
+
+      open(FILE, $_) || ((warn "Can't open file $_\n"), next FILE);
+
+      while (<FILE>) {
+         print OUTF;
+      }
+      close(FILE);
+   }
+}
+#############################################################################
+sub myls
+{
+# acts as a sort of ls
+# expects the directory as the first argument and the bsd_glob pattern as the (optional) second argument
+  my $dir = shift;
+  my $ext = shift;
+  if ($ext eq '') {$ext = '*';}
+  my @list = bsd_glob($dir.'/'.$ext);
+  for (@list) {
+#    s|^$dir/||;
+    print $_,"\n";
+    }
+}

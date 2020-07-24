@@ -1,0 +1,60 @@
+\providecommand{\href}[2]{#2}\begingroup\raggedright\begin{thebibliography}{10}
+
+\bibitem{ref:cms}
+{\bf CMS} Collaboration, R.~A. et~al., ``The CMS experiment at the CERN LHC,''
+  {\em JINST} {\bf 0803} (2008)
+S08004.
+JINST,0803,S08004. \href{http://dx.doi.org/10.1088/1748-0221/3/08/S08004}{{\tt
+  doi:10.1088/1748-0221/3/08/S08004}}.
+
+\bibitem{ref:hardware_alignment}
+{\bf CMS} Collaboration, CFT-09-017, ``Aligning the CMS Muon Chambers with the
+  Hardware Alignment System during the CRAFT08 Exercise,'' {\em J. Inst.}
+  (2009).
+
+\bibitem{ref:workflow}
+{\bf CMS} Collaboration, CFT-09-007, ``CRAFT Workflows Paper: from Detector to
+  Analysis,'' {\em J. Inst.} (2009).
+
+\bibitem{ref:tracker_alignment}
+{\bf CMS} Collaboration, CFT-09-003, ``Alignment of the CMS inner tracking
+  system with cosmic ray particles,'' {\em J. Inst.} (2009).
+
+\bibitem{ref:twikiCMSConventions}
+{\bf CMS} Collaboration, M.~Gr\"unewald, ``CMS Conventions.''
+  \url{https://twiki.cern.ch/twiki/bin/view/CMS/CMSConventions}.
+
+\bibitem{ref:Millepede}
+V.~Blobel, ``{Software alignment for tracking detectors},'' {\em Nucl. Instrum.
+  Meth.} {\bf A566} (2006)
+5--13.
+NUIMA,A566,5. \href{http://dx.doi.org/10.1016/j.nima.2006.05.157}{{\tt
+  doi:10.1016/j.nima.2006.05.157}}.
+
+\bibitem{ref:QC}
+{\bf CMS} Collaboration, S.~M. et~al., ``Drift Tubes Quality Assurance and
+  Quality Control.'' \url{http://cms.pd.infn.it/edr2/qcdoc.pdf}.
+
+\bibitem{ref:Survey}
+{\bf CMS} Collaboration, G.~B. et~al., ``DT Chamber Calibration web database.''
+  \url{http://kismalac.phys.klte.hu/cgi-bin/Survey/indexpage.pl}.
+
+\bibitem{ref:oldhip}
+V.~Karimaki, A.~Heikkinen, T.~Lampen, and T.~Linden, ``Sensor alignment by
+  tracks,''
+\href{http://www.arXiv.org/abs/physics/0306034}{{\tt arXiv:physics/0306034}}.
+PHYSICS/0306034.
+
+\bibitem{ref:minuit}
+F.~James and M.~Roos, ``Minuit: A System for Function Minimization and Analysis
+  of the Parameter Errors and Correlations,'' {\em Comput. Phys. Commun.} {\bf
+  10} (1975)
+343--367.
+CPHCB,10,343. \href{http://dx.doi.org/10.1016/0010-4655(75)90039-9}{{\tt
+  doi:10.1016/0010-4655(75)90039-9}}.
+
+\bibitem{ref:dtlocalreco}
+{\bf CMS} Collaboration, CFT-09-012, ``Results on Local Muon Reconstruction in
+  DT chambers from analysis of CRAFT data,'' {\em J. Inst.} (2009).
+
+\end{thebibliography}\endgroup

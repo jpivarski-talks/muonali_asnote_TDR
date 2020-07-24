@@ -1,0 +1,92 @@
+% CVS info. These are modified by cvs at checkout time.
+% The last version of these macros found before the maketitle will be the one on the front page,
+% so only the main file is tracked.
+% Edit by hand with care!
+\RCS$Revision: 1.12 $
+\RCS$Date: 2009/07/24 02:29:34 $
+\RCS$Name:  $
+%%%%%%%%%%%%% ptdr definitions %%%%%%%%%%%%%%%%%%%%%
+\input{ptdr-definitions}
+%%%%%%%%%%%%%%%  Title page %%%%%%%%%%%%%%%%%%%%%%%%
+\cmsNoteHeader{09-016}
+\title{Alignment of the CMS Muon System with \\ Cosmic Ray and Beam-Halo Tracks}% Force line breaks with \\
+
+%Author is always "The CMS Collaboration" for PAS, so author, etc will be ignored
+\address[cern]{CERN}
+\address[su]{Some University}
+\author[su]{Some Cool Dudes}\author[cern]{A. Cern Person}
+
+% please supply the date in yyyy/mm/dd format. Today has been
+% redefined to do so, but it should be fixed as of the final release date.
+\date{\today}
+
+% note that you cannot use \verb in the abstract text
+\abstract{
+\input{abstract}
+}
+
+% these need to be filled in by hand and should (MUST) match the info
+% in the TeX equivalents less the TeX markup
+\hypersetup{%
+pdfauthor={Some Cool Dudes, A. Cern Person},%
+pdftitle={Muon Track-based alignment},%
+pdfsubject={CMS},%
+pdfkeywords={CMS, detectors, alignment, tracks}}
+
+\maketitle %maketitle comes after all the front information has been supplied
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Begin text %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\tableofcontents
+
+%---------------------------------------------------------------------
+\section{Introduction and Geometry}
+\input{intro_geom}
+
+%---------------------------------------------------------------------
+\section{Local DT Alignment}
+\label{sec:localdt}
+\input{standalone_dt_alignment}
+
+%---------------------------------------------------------------------
+\section{Local CSC Alignment}
+\label{sec:localcsc}
+\input{csc_overlaps_alignment}
+
+%---------------------------------------------------------------------
+\section{Global Muon Alignment}
+\label{sec:global_muon_alignment}
+
+Local muon alignment procedures arrange sets of chambers in
+self-consistent coordinate systems, but cannot relate those
+coordinates to the locations of other subsystems of CMS, particularly
+the tracker.  In this section, we describe methods to
+align muon chambers relative to the tracker, such that all
+tracking volumes in CMS share one global system of coordinates.  Since
+these global alignment methods are partly independent of the local alignments,
+they can be used to cross-check each other.
+
+Two algorithms, HIP (Hits and Impact Points) and Millepede, have been
+developed to align muon chambers relative to the tracker.  Each is
+described in its own section below, followed by studies in Monte Carlo
+simulations, and then results of each with cosmic ray data.
+
+\subsection{The HIP Algorithm}
+\label{sec:hipalgo}
+\input{gma_hip_algorithm}  
+
+\subsection{The MilliPede Algorithm}
+\input{gma_mp_algorithm}  
+
+\subsection{Monte Carlo Study and Discussion of Systematic Errors}
+\input{mc_and_syst_studies}
+
+\subsection{Global Alignment Results and Cross-Checks}
+\input{gma_hip_results}  
+
+%---------------------------------------------------------------------
+\section{Conclusions}
+\input{conclusions}
+
+%---------------------------------------------------------------------
+\bibliography{auto_generated}   % will be created by the tdr script.
+
